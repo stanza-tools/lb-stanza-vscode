@@ -29,6 +29,10 @@ Only supports syntax highlighting and auto-indentation for now.
 
 ## Release Notes
 
+### 0.3.0
+
+Add support for `.proj` files (environment variable highlighting and the extra builtin functions described [here](https://github.com/StanzaOrg/lbstanza/blob/master/docs/build-system.md))
+
 ### 0.2.0
 
 Add liberal wordPattern and an experimental outdent rule (VS Code can't actually figure out tabbed indentation)
