@@ -1,0 +1,25 @@
+{
+    "name": "lb-stanza-vscode",
+    "displayName": "L.B. Stanza",
+    "description": "Stanza langugage support in VS Code",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.68.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "stanza",
+            "aliases": ["L.B. Stanza", "stanza"],
+            "extensions": [".stanza"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "stanza",
+            "scopeName": "source.stanza",
+            "path": "./syntaxes/stanza.tmLanguage.json"
+        }]
+    }
+}
