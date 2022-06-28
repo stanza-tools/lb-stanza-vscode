@@ -1,7 +1,6 @@
 {
 	"comments": {
 		"lineComment": "#",
-		"blockComment": [ "\"\"\"", "\"\"\"" ]
 	},
 	"brackets": [
 		["{", "}"],
@@ -22,10 +21,20 @@
 		["\"", "\""],
 		["'", "'"],
 	],
+	"wordPattern": "[^\\d\\s()~!@#$%^*+\\-=\\/.&:Ou|<>][^:\\s]+",
 	"onEnterRules": [
 		{
 			"beforeText": "^.*[:%]$",
 			"action": { "indent": "indent" }
 		},
-	]
+		{
+			"previousLineText": "^$",
+			"beforeText": "^[\\s\\t]+$",
+			"afterText": "^$",
+			"action": {
+				"indent": "outdent",
+				"removeText": 4
+			}
+		},
+	],
 }
