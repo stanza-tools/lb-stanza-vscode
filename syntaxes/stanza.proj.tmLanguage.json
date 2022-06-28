@@ -1,0 +1,101 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "L.B. Stanza",
+	"scopeName": "source.stanza.proj",
+	"patterns": [
+        { "include": "#package" },
+        { "include": "#import" },
+        { "include": "#build" },
+        { "include": "#proj-string" },
+		{ "include": "source.stanza" }
+    ],
+    "repository": {
+        "package": {
+            "name": "meta.declaration.package.stanza.proj",
+			"begin": "package",
+            "beginCaptures": {
+                "0": { "name": "storage.type.package.stanza.proj" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza.proj" }
+            },
+            "patterns": [
+                {
+                    "match": "defined-in|requires",
+                    "name": "keyword.control.$0.stanza.proj"
+                },
+                { "include": "#proj-string" },
+                {
+                    "match": "[^ \t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
+                    "name": "entity.name.section.stanza.proj"
+                }
+            ]
+        },
+        "import": {
+            "name": "meta.declaration.import.stanza.proj",
+			"begin": "import",
+            "beginCaptures": {
+                "0": { "name": "storage.type.import.stanza.proj" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza.proj" }
+            },
+            "patterns": [
+                {
+                    "match": "when-imported",
+                    "name": "keyword.control.$0.stanza.proj"
+                },
+                { "include": "#proj-string" },
+                {
+                    "match": "[^ \t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
+                    "name": "entity.name.section.stanza.proj"
+                }
+            ]
+        },
+        "build": {
+            "name": "meta.declaration.build.stanza.proj",
+			"begin": "build",
+            "beginCaptures": {
+                "0": { "name": "storage.type.build.stanza.proj" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza.proj" }
+            },
+            "patterns": [
+                {
+                    "match": "[^ \t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
+                    "name": "entity.name.section.stanza.proj"
+                }
+            ]
+        },
+        "proj-string": {
+            "begin": "\"",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.string.begin.stanza.proj" }
+            },
+            "end": "\"",
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.string.end.stanza.proj" }
+            },
+            "name": "string.quoted.double.stanza",
+            "patterns": [
+                {
+                    "match": "(\\{)([\\w\\d_\\.]+)(\\})",
+                    "captures": {
+                        "1": { "name": "punctuation.definition.template-expression.begin.stanza.proj" },
+                        "2": { "name": "entity.name.variable.environment.begin.stanza.proj" },
+                        "3": { "name": "punctuation.definition.template-expression.end.stanza.proj" }
+                    }
+                },
+                { "include": "#subst-interp-op" }
+            ]
+        },
+        "subst-interp-op": {
+            "name": "keyword.other.interpolation.stanza.proj",
+            "match": "(?x) (?<!\\\\) % [_*,~@%]"
+        }
+    }
+}

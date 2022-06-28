@@ -25,6 +25,18 @@
                     ".stanza"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "stanza-proj",
+                "aliases": [
+                    "L.B. Stanza Project",
+                    "Stanza Project",
+                    "stanza.proj"
+                ],
+                "extensions": [
+                    ".proj"
+                ],
+                "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
@@ -32,6 +44,11 @@
                 "language": "stanza",
                 "scopeName": "source.stanza",
                 "path": "./syntaxes/stanza.tmLanguage.json"
+            },
+            {
+                "language": "stanza-proj",
+                "scopeName": "source.stanza.proj",
+                "path": "./syntaxes/stanza.proj.tmLanguage.json"
             }
         ]
     }
