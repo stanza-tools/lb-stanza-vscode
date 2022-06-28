@@ -6,8 +6,6 @@ A VS Code extension for LB Stanza. Currently just a translation of the old Atom 
 
 An extension that gives you general language tooling for Stanza programs.
 
-\!\[feature X\]\(images/feature-x.png\)
-
 > Warning: Nothing currently works besides syntax highlighting and basic indentation.
 
 ## Requirements

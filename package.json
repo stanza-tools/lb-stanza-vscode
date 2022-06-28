@@ -3,6 +3,9 @@
     "displayName": "L.B. Stanza",
     "description": "Stanza langugage support in VS Code",
     "version": "0.1.0",
+    "repository": {
+        "url": "https://github.com/stanza-tools/lb-stanza-vscode"
+    },
     "engines": {
         "vscode": "^1.68.0"
     },
