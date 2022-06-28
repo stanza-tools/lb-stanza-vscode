@@ -2,7 +2,7 @@
     "name": "lb-stanza-vscode",
     "displayName": "L.B. Stanza",
     "description": "Stanza langugage support in VS Code",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "engines": {
         "vscode": "^1.68.0"
     },
