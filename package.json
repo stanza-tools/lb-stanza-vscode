@@ -6,6 +6,7 @@
     "repository": {
         "url": "https://github.com/stanza-tools/lb-stanza-vscode"
     },
+    "publisher": "StanzaTools",
     "engines": {
         "vscode": "^1.68.0"
     },
