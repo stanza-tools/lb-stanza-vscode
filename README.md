@@ -29,6 +29,10 @@ Only supports syntax highlighting and auto-indentation for now.
 
 ## Release Notes
 
+### 0.2.0
+
+Add liberal wordPattern and an experimental outdent rule (VS Code can't actually figure out tabbed indentation)
+
 ### 0.1.0
 
 Import from [language-stanza](https://github.com/stanza-tools/language-stanza)
