@@ -28,7 +28,7 @@
                 { "include": "#proj-string" },
                 {
                     "match": "[^ \t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
-                    "name": "entity.name.section.stanza.proj"
+                    "name": "entity.name.function.package.stanza.proj"
                 }
             ]
         },
@@ -67,7 +67,7 @@
             "patterns": [
                 {
                     "match": "[^ \t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
-                    "name": "entity.name.section.stanza.proj"
+                    "name": "entity.name.function.package.stanza.proj"
                 }
             ]
         },
