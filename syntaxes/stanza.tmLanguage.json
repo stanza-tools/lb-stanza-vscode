@@ -217,33 +217,26 @@
             ]
         },
         { "include": "#types" },
-        {
-            "match": "(?<!\\w|\\-)(?:val|import|with)(?!\\w|\\-)",
-            "name": "storage.type.lostanza.stanza"
+        {   "name": "storage.type.lostanza.stanza",
+            "match": "(?<!\\w|\\-)(?:val|import|with)(?!\\w|\\-)"
         },
-        {
-            "match": "(?x)(?<!\\w|\\-|\\$)(?: var|defpackage|deftype|defstruct|defn\\*?| defmulti|defmethod\\*?|defproduction|defsyntax|defrule )(?!\\w|\\-)",
-            "name": "storage.type.$0.stanza"
+        {   "name": "storage.type.$0.stanza",
+            "match": "(?x)(?<!\\w|\\-|\\$)(?: var|defpackage|deftype|defstruct|defn\\*?| defmulti|defmethod\\*?|defproduction|defsyntax|defrule )(?!\\w|\\-)"            
         },
-        {
-            "match": "(?<!\\w|\\-)(public|protected)(?!\\w|\\-)",
-            "name": "storage.modifier.stanza"
+        {   "name": "storage.modifier.stanza",
+            "match": "(?<!\\w|\\-)(public|protected)(?!\\w|\\-)"
         },
-        {
-            "match": "(?x)(?<!\\w|\\-)(?: if|else|when|switch|match|let|let-var| where|for|while|label|yield|try|catch| finally|throw|attempt|fn\\*?| multifn\\*?|qquote|do )(?!\\w|\\-)",
-            "name": "keyword.control.stanza"
+        {   "name": "keyword.control.stanza",
+            "match": "(?x)(?<!\\w|\\-)(?: if|else|when|switch|match|let|let-var| where|for|while|label|yield|try|catch| finally|throw|attempt|fn\\*?| multifn\\*?|qquote|do )(?!\\w|\\-)"
         },
-        {
-            "match": "(?x)(?<!\\w|\\-)(?: to|through|by|in|and|or|not|as\\??|is|seq )(?!\\w|\\-)",
-            "name": "keyword.operator.stanza"
+        {   "name": "keyword.operator.stanza",
+            "match": "(?x)(?<!\\w|\\-)(?: to|through|by|in|and|or|not|as\\??|is|seq )(?!\\w|\\-)"
         },
-        {
-            "match": "(?<!\\w|\\-)(true|false)(?!\\w|\\-)",
-            "name": "constant.language.stanza"
+        {   "name": "constant.language.stanza",
+            "match": "(?<!\\w|\\-)(true|false)(?!\\w|\\-)"
         },
-        {
-            "match": "[~!@#$%^*+\\-=/.:&|<>]+(?:[ \t]|$)",
-            "name": "keyword.operator.stanza"
+        {   "name": "keyword.operator.stanza",
+            "match": "[~!@#$%^*+\\-=/.:&|<>]+(?:[ \t]|$)"
         },
         {	"contentName": "constant.language.s-expression.stanza",
             "begin": "`\\(",
@@ -254,10 +247,7 @@
             },
             "end": "\\)",
             "patterns": [
-                {
-                    "begin": "\\(",
-                    "end": "\\)"
-                }
+                { "begin": "\\(", "end": "\\)" }
             ]
         },
         {
@@ -278,30 +268,20 @@
         {
             "begin": "`",
             "beginCaptures": {
-                "0": {
-                    "name": "punctuation.definition.s-exp.stanza"
-                }
+                "0": { "name": "punctuation.definition.s-exp.stanza" }
             },
             "end": "(?=[\\s)}\\]])",
             "name": "constant.language.s-exp.stanza",
             "patterns": [
-                {
-                    "begin": "\\(",
-                    "end": "\\)"
-                },
-                {
-                    "begin": "\\{",
-                    "end": "\\}"
-                }
+                { "begin": "\\(", "end": "\\)" },
+                { "begin": "\\{", "end": "\\}" }
             ]
         },
         {
             "begin": "(?<=\\s|\\()\\[",
             "end": "\\]",
             "captures": {
-                "0": {
-                    "name": "punctuation.section.embedded.deref.stanza"
-                }
+                "0": { "name": "punctuation.section.embedded.deref.stanza" }
             },
             "patterns": [
                 {
@@ -317,24 +297,15 @@
         {	"name": "meta.type.instance.stanza",
             "begin": "(?x) (\\s*)(?:(val|var)\\s+.+\\s+(=)\\s+)? (new)\\s+([A-Z][A-Za-z0-9_]*)(?=.*:$)",
             "beginCaptures": {
-                "2": {
-                    "name": "storage.type.stanza"
-                },
-                "3": {
-                    "name": "keyword.operator.stanza"
-                },
-                "4": {
-                    "name": "storage.type.stanza"
-                },
-                "5": {
-                    "name": "support.type.stanza"
-                }
+                "2": { "name": "storage.type.stanza" },
+                "3": { "name": "keyword.operator.stanza" },
+                "4": { "name": "storage.type.stanza" },
+                "5": { "name": "support.type.stanza" }
             },
             "end": "^(?!\\1\\s+|\\n)",
             "patterns": [
-                {
-                    "match": "\\bthis\\b",
-                    "name": "variable.language.instance.stanza"
+                {   "name": "variable.language.instance.stanza",
+                    "match": "\\bthis\\b"
                 },
                 { "include": "$self" }
             ]
@@ -343,25 +314,18 @@
     "repository": {
         "lostanza": {
             "patterns": [
-                {
-                    "match": "(?<!\\w|\\-)(?:return|call-c|value|new)(?!\\w|\\-|\\:)",
-                    "name": "keyword.other.special-method.lostanza.stanza"
+                {   "name": "keyword.other.special-method.lostanza.stanza",
+                    "match": "(?<!\\w|\\-)(?:return|call-c|value|new)(?!\\w|\\-|\\:)"
                 },
                 {
                     "begin": "(ptr|ref)(\\<)",
                     "beginCaptures": {
-                        "1": {
-                            "name": "keyword.other.lostanza.stanza"
-                        },
-                        "2": {
-                            "name": "punctuation.section.stanza"
-                        }
+                        "1": { "name": "keyword.other.lostanza.stanza" },
+                        "2": { "name": "punctuation.section.stanza" }
                     },
                     "end": "(?<!\\-)\\>",
                     "endCaptures": {
-                        "0": {
-                            "name": "punctuation.section.stanza"
-                        }
+                        "0": { "name": "punctuation.section.stanza" }
                     },
                     "name": "meta.type.lostanza.stanza",
                     "patterns": [
@@ -388,18 +352,12 @@
                 {
                     "begin": "(?<!\\w)([A-Z][A-Za-z0-9_-]*)(?![(:\\-]|\\w)(<)",
                     "captures": {
-                        "1": {
-                            "name": "support.type.parameterized.stanza"
-                        },
-                        "2": {
-                            "name": "punctuation.section.type.parameter.begin.stanza"
-                        }
+                        "1": { "name": "support.type.parameterized.stanza" },
+                        "2": { "name": "punctuation.section.type.parameter.begin.stanza" }
                     },
                     "end": "(?!\\-)>",
                     "endCaptures": {
-                        "0": {
-                            "name": "punctuation.section.type.parameter.end.stanza"
-                        }
+                        "0": { "name": "punctuation.section.type.parameter.end.stanza" }
                     },
                     "name": "meta.type.parameterized.stanza",
                     "patterns": [
