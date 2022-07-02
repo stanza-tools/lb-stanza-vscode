@@ -3,88 +3,132 @@
 	"name": "L.B. Stanza",
 	"scopeName": "source.stanza",
 	"patterns": [
-		{
-			"match": ";.*",
-			"name": "comment.line.stanza"
+		{   "name": "comment.line.stanza",
+			"match": "(?x) \\s* ; .*"
 		},
-		{
-			"match": "^[ \t]*(#define|#if-defined|#if-not-defined|#else)",
-			"name": "meta.keyword.compile_time_flags.stanza"
+		{   "name": "meta.keyword.compile_time_flags.stanza",
+			"match": "^[ \t]*(#define|#if-defined|#if-not-defined|#else)"
 		},
-		{	"name": "meta.declaration.package.stanza",
-			"begin": "defpackage",
+        {	"contentName": "constant.other.s-expression.delimited.stanza",
+            "begin": "(?x) \\s* ( ` ) ( \\( )",
             "beginCaptures": {
-                "0": { "name": "storage.type.package.stanza" }
+                "1": { "name": "keyword.other.s-exp.stanza" },
+                "2": { "name": "punctuation.definition.s-expression.delimited.begin.stanza" }
             },
-            "end": "\\s*$|:|(?=;)",
+            "end": "\\)",
             "endCaptures": {
-                "0": { "name": "keyword.operator.colon.stanza" }
+                "0": { "name": "punctuation.definition.s-expression.delimited.end.stanza" }
+            },
+            "patterns": [ { "begin": "\\(", "end": "\\)" } ]
+        },
+        {   "name": "meta.operator.sequence.stanza",
+            "begin": "(?x) \\s* (?<! ` ) \\(",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.sequence.begin.stanza" }
+            },
+            "end": "\\)",
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.sequence.end.stanza" }
             },
             "patterns": [
-                {
-                    "match": "[^ \"'\t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
-                    "name": "entity.name.function.package.stanza"
-                },
-                {
-                    "begin": "(<:)",
-                    "beginCaptures": {
-                        "0": { "name": "keyword.operator.parent.stanza" }
-                    },
-                    "end": "(?=\\s*$)|(?=[:;])",
-                    "contentName": "entity.other.inherited-class.stanza",
-                    "patterns": [
-                        {
-                            "match": "&",
-                            "name": "keyword.operator.intersection.stanza"
-                        }
-                    ]
-                }
+                { "include": "$self" }
             ]
         },
-        {	"name": "meta.declaration.type.stanza",
-			"begin": "(?<!\\$)(?:defstruct|deftype)",
-            "beginCaptures": {
-                "0": { "name": "storage.type.type.stanza" }
-            },
-            "end": "\\s*$|:|(?=;)",
-            "endCaptures": {
-                "0": { "name": "keyword.operator.colon.stanza" }
-            },
-            "patterns": [
-                {
-                    "match": "[^ \"'\t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
-                    "name": "entity.name.type.stanza"
-                },
-                {
-                    "begin": "(<:)",
-                    "beginCaptures": {
-                        "0": { "name": "keyword.operator.parent.stanza" }
-                    },
-                    "end": "(?=\\s*$)|(?=[:;])",
-                    "contentName": "entity.other.inherited-class.stanza",
-                    "patterns": [
-                        {
-                            "match": "&",
-                            "name": "keyword.operator.intersection.stanza"
-                        }
-                    ]
-                }
-            ]
-        },
-		{
-            "match": "(?x) (defn|defmethod|defmulti)\\*?\\s+ ([^ \"'\t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*) (\\s+|\\<)",
-            "name": "meta.declaration.function.stanza",
+        { "include": "#tuples" },
+        {   "name": "meta.function.type.parameter.stanza",
+            "begin": "(?x) (?<! \\s | < ) < (?! < | : | \\) | \\= )",
             "captures": {
-                "1": { "name": "storage.type.function.stanza" },
-                "2": { "name": "entity.name.function.stanza" },
-                "3": { "name": "keyword.operator.parameter.stanza" }
+                "0": { "name": "punctuation.section.function.type.parameter.begin.stanza" }
+            },
+            "end": "(?x) (?<!\\-) >",
+            "endCaptures": {
+                "0": { "name": "punctuation.section.tfunction.ype.parameter.end.stanza" }
+            },
+            "patterns": [
+                { "include": "#types" }
+            ]
+        },
+		{	"name": "meta.declaration.package.stanza",
+			"begin": "(?x) ^ \\s* (defpackage)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.package.stanza" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza" }
+            },
+            "patterns": [
+                {
+                    "match": "[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*",
+                    "name": "entity.name.function.package.stanza"
+                }
+            ]
+        },
+        {	"name": "meta.declaration.import.stanza",
+			"begin": "(?x) ^ \\s* (import) (?= \\s )",
+            "beginCaptures": {
+                "1": { "name": "storage.type.import.stanza" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.import.colon.stanza" }
+            },
+            "patterns": [
+                {   "name": "keyword.control.import.$0.stanza",
+                    "match": "(?x) (?<! \\w | \\- | \\$ ) (?: with | from | as ) (?! \\w | \\- | \\$ )"
+                },
+                {   "name": "entity.name.function.package.stanza",
+                    "match": "[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*"
+                }
+            ]
+        },
+        {	"name": "meta.declaration.$3.stanza",
+			"begin": "(?x) ^ \\s* (?: (public|protected) \\s+ )? ( def ( struct | type | production | syntax ))",
+            "beginCaptures": {
+                "1": { "name": "storage.modifier.type.stanza" },
+                "2": { "name": "storage.type.type.stanza" }
+            },
+            "end": "(?x) $ | : | (?= ; ) ",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza" }
+            },
+            "patterns": [
+                { "include": "#types" }
+            ]
+        },
+        {	"name": "meta.declaration.object.stanza",
+			"begin": "(?x) \\s* (new)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.object.stanza" }
+            },
+            "end": "\\s*$|:|(?=;)",
+            "endCaptures": {
+                "0": { "name": "keyword.operator.colon.stanza" }
+            },
+            "patterns": [
+                {
+                    "match": "[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*",
+                    "name": "entity.name.type.stanza"
+                }
+            ]
+        },
+		{   "name": "meta.declaration.function.stanza",
+            "match": "(?x) ^ \\s* (?: (public|protected) \\s+ )? ( defn|defmethod|defmulti ) \\*? \\s+ ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*) (?= \\s | < )",
+            "captures": {
+                "1": { "name": "storage.modifier.function.visibility.stanza" },
+                "2": { "name": "storage.type.function.stanza" },
+                "3": { "name": "entity.name.function.stanza" }
             }
         },
-		{
+        { "include": "#return-types" },
+		{   "name": "meta.function.anonymous.sugar.stanza",
             "begin": "{",
-            "end": "}",
-            "captures": {
-                "0": { "name": "keyword.other.function.anon.stanza" }
+            "end": "(?x) } \\s*",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.function.anon.begin.stanza" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.function.anon.end.stanza" }
             },
             "patterns": [
                 {
@@ -94,38 +138,36 @@
                 { "include": "$self" }
             ]
         },
-        {
-            "match": "(?<!\\w)-?[0-9][^ \t,.:&|<>\\[\\]{}()]*",
-            "name": "constant.numeric.stanza"
-        },
-        {
-            "begin": "\"",
+        {   "name": "meta.identifier.typed.stanza",
+            "begin": "(?x) \\s* (?: (var|val) \\s+ )? (\\?)? ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*) (:) \\s*",
             "beginCaptures": {
-                "0": { "name": "punctuation.definition.string.begin.stanza" }
+                "1": { "name": "storage.type.variable.stanza" },
+                "2": { "name": "storage.modifier.type.captured.stanza" },
+                "3": { "name": "variable.identifier.stanza" },
+                "4": { "name": "keyword.operator.colon.stanza" }
             },
-            "end": "\"",
-            "endCaptures": {
-                "0": { "name": "punctuation.definition.string.end.stanza" }
-            },
-            "name": "string.quoted.double.stanza",
+            "end": "(?x) (?= , | \\) | \\] | \\} | $ ) | \\s+ (?! -> | \\.\\.\\. | \\| | \\& )",
             "patterns": [
-                {
-                    "match": "(?<!\\\\)%[_*,~@%]",
-                    "name": "keyword.other.interpolation.stanza"
-                }
+                { "include": "#types" }
             ]
         },
-        {
-            "match": "'(?:\\\\.|.)(.*?)'",
-            "name": "string.quoted.single.char.stanza",
-            "captures": {
-                "1": {
-                    "name": "invalid.illegal.char.stanza"
-                }
-            }
+        {   "name": "meta.declaration.identifier.stanza",
+            "begin": "(?x) \\s* (var|val|defrule) \\s+",
+            "beginCaptures": {
+                "1": { "name": "storage.type.$1.stanza" },
+                "2": { "name": "variable.identifier.stanza" }
+            },
+            "end": "(?x) ( = | (?=\\)) ) (?! > ) ",
+            "endCaptures": {
+                "1": { "name": "keyword.operator.assignment.stanza" }
+            },
+            "patterns": [
+                { "include": "#identifiers" },
+                { "include": "#tuples" }
+            ]
         },
-        {
-            "begin": "label(?=[ <])",
+        {   "name": "meta.scope.label.stanza",
+            "begin": "(?x) \\s* label(?=[ <])",
             "beginCaptures": {
                 "0": {
                     "name": "storage.type.scope.stanza"
@@ -137,7 +179,6 @@
                     "name": "keyword.operator.colon.stanza"
                 }
             },
-            "name": "meta.scope.label.stanza",
             "patterns": [
                 {
                     "begin": "<",
@@ -148,20 +189,45 @@
                     ]
                 },
                 {
-                    "match": "[^ \"'\t0-9~!@#$%^*+-=/.:&|<>][^ \t,.:&|<>\\[\\]{}()]*",
+                    "match": "[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*",
                     "name": "entity.name.section.scope.stanza"
                 }
             ]
         },
-        {
-            "match": "(?x)(?<!\\-)\\b( to-(?:char|seq|string|array|tuple|list|symbol|byte|int|long|float|double) )(?=\\(|\\{|\\s+\\$)",
-            "name": "support.function.any-method.conversion.stanza"
+        {   "name": "constant.numeric.stanza",
+            "match": "(?<!\\w)-?[0-9][^ \t,.:&|<>\\[\\]{}()]*"
         },
-		{
-            "match": "(?x)(?<!\\-)\\b( (?:not-)?equal\\?|compare| less(?:-eq)?\\?|greater(?:-eq)?\\?| max(?:imum)?|min(?:imum)?|hash|length|empty\\?|next|peek| get\\??|set|map!?|reverse!|in-reverse| print(?:ln)?(?:-all)?| (?:with|current)-output-stream|get-(?:char|byte)| (?:do-)indented|put|close|with-output-file|spit| write(?:-all)?|close|slurp|peek\\?|info| bits(?:-as-(?:float|double))?|rand|fill(?:-template)?| (?:ceil|floor)-log2|(?:next|prev)-pow2|sum|product| complement|digit\\?|letter\\?|(?:upper|lower)-case\\??| start|end|step|inclusive\\?| matches\\?|prefix\\?|suffix\\?|append(?:-all)?| string-join|(?:last-)?index-of-chars?|replace|trim| add(?:-all)?|clear|(?:get|set)-chars| cons|headn?|tailn?|(?:in-)?reverse| (?:but-)?last|transpose|seq-append|filename|line|column| item|unwrap-(?:token|all)|key(?:\\?|s)?|value(?:\\?|!|s)?| symbol-join|gensym|name|id|qualified\\?|qualifier| throw|with-(?:exception-handler|finally)|try-catch-finally| fatal|fail|with-attempt|attempt-else|generate| resume|suspend|break|close|active\\?|open\\?| dynamic-wind|find!?|first!?|seq\\??|filter| index-when!?|split|take-(?:while|until)|seq-cat| all\\?|none\\?|any\\?|count|repeat(?:-while)?|repeatedly| take(?:-up-to)?-n|cat(?:-all)?|join|zip(?:-all)?| contains\\?|index-of!?|reduce(?:-right)?|unique| lookup\\??|parallel-seq|qsort!|lazy-qsort|marker!?| add-gc-notifier|command-line-arguments|file-exists\\?| delete-file|resolve-path|current-time-(?:ms|us)| (?:get|set)-env|call-system|stop|time| exp|log(?:10)?|pow|sin|cos|tan|asin|acos|atan|atan2| sinh|cosh|tanh|ceil|floor|round|to-(?:radians|degrees)| pop|peek|remove(?:-item|when)?|update|shorten| lengthen|default\\?|read(?:-file|-all)?|tagged-list\\?| )(?=\\(|\\{|\\s+\\$)",
-            "name": "support.function.core.stanza"
+        {   "name": "string.quoted.double.stanza",
+            "begin": "(?x) \\s* ( \" )",
+            "beginCaptures": {
+                "1": { "name": "punctuation.definition.string.begin.stanza" }
+            },
+            "end": "\"",
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.string.end.stanza" }
+            },
+            "patterns": [
+                {
+                    "match": "(?<!\\\\)%[_*,~@%]",
+                    "name": "keyword.other.interpolation.stanza"
+                }
+            ]
         },
-        {
+        {   "name": "string.quoted.single.char.stanza",
+            "match": "'(?:\\\\.|.)(.*?)'",
+            "captures": {
+                "1": {
+                    "name": "invalid.illegal.char.stanza"
+                }
+            }
+        },
+        {   "name": "support.function.any-method.conversion.stanza",
+            "match": "(?x) \\s* (?<! \\w | \\- | \\$ ) ( to-(?:char|seq|string|array|tuple|list|symbol|byte|int|long|float|double) )(?=\\(|\\{|\\s+\\$)"
+        },
+		{   "name": "support.function.core.stanza",
+            "match": "(?x) \\s* (?<! \\w | \\- | \\$ ) ( (?:not-)?equal\\?|compare| less(?:-eq)?\\?|greater(?:-eq)?\\?| max(?:imum)?|min(?:imum)?|hash|length|empty\\?|next|peek| get\\??|set|map!?|reverse!|in-reverse| print(?:ln)?(?:-all)?| (?:with|current)-output-stream|get-(?:char|byte)| (?:do-)indented|put|close|with-output-file|spit| write(?:-all)?|close|slurp|peek\\?|info| bits(?:-as-(?:float|double))?|rand|fill(?:-template)?| (?:ceil|floor)-log2|(?:next|prev)-pow2|sum|product| complement|digit\\?|letter\\?|(?:upper|lower)-case\\??| start|end|step|inclusive\\?| matches\\?|prefix\\?|suffix\\?|append(?:-all)?| string-join|(?:last-)?index-of-chars?|replace|trim| add(?:-all)?|clear|(?:get|set)-chars| cons|headn?|tailn?|(?:in-)?reverse| (?:but-)?last|transpose|seq-append|filename|line|column| item|unwrap-(?:token|all)|key(?:\\?|s)?|value(?:\\?|!|s)?| symbol-join|gensym|name|id|qualified\\?|qualifier| throw|with-(?:exception-handler|finally)|try-catch-finally| fatal|fail|with-attempt|attempt-else|generate| resume|suspend|break|close|active\\?|open\\?| dynamic-wind|find!?|first!?|seq\\??|filter| index-when!?|split|take-(?:while|until)|seq-cat| all\\?|none\\?|any\\?|count|repeat(?:-while)?|repeatedly| take(?:-up-to)?-n|cat(?:-all)?|join|zip(?:-all)?| contains\\?|index-of!?|reduce(?:-right)?|unique| lookup\\??|parallel-seq|qsort!|lazy-qsort|marker!?| add-gc-notifier|command-line-arguments|file-exists\\?| delete-file|resolve-path|current-time-(?:ms|us)| (?:get|set)-env|call-system|stop|time| exp|log(?:10)?|pow|sin|cos|tan|asin|acos|atan|atan2| sinh|cosh|tanh|ceil|floor|round|to-(?:radians|degrees)| pop|peek|remove(?:-item|when)?|update|shorten| lengthen|default\\?|read(?:-file|-all)?|tagged-list\\?| ) (?= \\( | \\{ | \\s+ \\$ )"
+        },
+        {   "name": "meta.lostanza.function.stanza",
             "begin": "(?x) ^(\\s*)(?:(public|protected)\\s+)? (lostanza|extern)(?![\\w\\-])(?=.*(?:=|:)$)",
             "beginCaptures": {
                 "2": {
@@ -172,22 +238,20 @@
                 }
             },
             "end": "^(?!\\1\\s+|\\n)",
-            "name": "meta.lostanza.function.stanza",
             "patterns": [
                 { "include": "#lostanza" },
                 { "include": "$self" }
             ]
         },
-        {
+        {   "name": "meta.lostanza.type.stanza",
             "match": "(lostanza)\\s+(deftype)\\s+(\\S+)\\s+",
             "captures": {
                 "1": { "name": "support.function.lostanza.stanza" },
                 "2": { "name": "storage.type.type.lostanza.stanza" },
                 "3": { "name": "entity.name.type.lostanza.stanza" }
-            },
-            "name": "meta.lostanza.type.stanza"
+            }
         },
-        {
+        {   "name": "meta.lostanza.variable.stanza",
             "begin": "(?x)(lostanza)\\s+(?: (val|var)\\s+\\S+\\s*:| (defn)\\s+(\\S+)\\s+\\()",
             "beginCaptures": {
                 "1": { "name": "support.function.lostanza.stanza" },
@@ -196,13 +260,12 @@
                 "4": { "name": "entity.name.function.lostanza.stanza" }
             },
             "end": "$",
-            "name": "meta.lostanza.variable.stanza",
             "patterns": [
                 { "include": "#lostanza" },
                 { "include": "$self" }
             ]
         },
-        {
+        {   "name": "meta.lostanza.external.stanza",
             "begin": "\\s*(extern)\\s+(\\S+)\\s*(:)",
             "beginCaptures": {
                 "1": { "name": "storage.type.external.lostanza.stanza" },
@@ -210,47 +273,31 @@
                 "3": { "name": "keyword.operator.stanza" }
             },
             "end": "$",
-            "name": "meta.lostanza.external.stanza",
             "patterns": [
                 { "include": "#lostanza" },
                 { "include": "$self" }
             ]
         },
-        { "include": "#types" },
-        {   "name": "storage.type.lostanza.stanza",
-            "match": "(?<!\\w|\\-)(?:val|import|with)(?!\\w|\\-)"
-        },
-        {   "name": "storage.type.$0.stanza",
-            "match": "(?x)(?<!\\w|\\-|\\$)(?: var|defpackage|deftype|defstruct|defn\\*?| defmulti|defmethod\\*?|defproduction|defsyntax|defrule )(?!\\w|\\-)"            
-        },
-        {   "name": "storage.modifier.stanza",
-            "match": "(?<!\\w|\\-)(public|protected)(?!\\w|\\-)"
-        },
         {   "name": "keyword.control.stanza",
-            "match": "(?x)(?<!\\w|\\-)(?: if|else|when|switch|match|let|let-var| where|for|while|label|yield|try|catch| finally|throw|attempt|fn\\*?| multifn\\*?|qquote|do )(?!\\w|\\-)"
+            "match": "(?x) \\s* (?<! \\w | \\- | \\$ ) (?: (?:fail-)?if|else|when|switch|match|let|let-var|where|for|from|while|label|yield|try|catch|finally|throw|attempt|fn\\*?|multifn\\*?|qquote|do )(?!\\w|\\-)"
         },
-        {   "name": "keyword.operator.stanza",
-            "match": "(?x)(?<!\\w|\\-)(?: to|through|by|in|and|or|not|as\\??|is|seq )(?!\\w|\\-)"
+        {   "name": "keyword.language.stanza",
+            "match": "(?x) \\s* (?<! \\w | \\- | \\$ ) (?:to|this|through|by|in|and|or|not|as\\??|is|seq) (?! \\w | \\- )"
         },
         {   "name": "constant.language.stanza",
             "match": "(?<!\\w|\\-)(true|false)(?!\\w|\\-)"
         },
+        {   "name": "meta.constant.symbol.string.stanza",
+            "match": "(?x) \\s* (`) ( [^\\s\\)\\]\\}]+ )",
+            "captures": {
+                "1": { "name": "keyword.other.s-exp.stanza" },
+                "2": { "name": "constant.other.symbol.stanza" }
+            }
+        },
         {   "name": "keyword.operator.stanza",
-            "match": "[~!@#$%^*+\\-=/.:&|<>]+(?:[ \t]|$)"
+            "match": "(?x) \\s* (?: ~ | ! | \\$ | % | \\^ | , | \\* | \\+ | - | != | => | ={1,2} | \\/ | \\.{1,2} | : | & | <[=:] | << | < | >= | >{1,3} | \\| ) (?= \\s | $ ) \\s*"
         },
-        {	"contentName": "constant.language.s-expression.stanza",
-            "begin": "`\\(",
-            "beginCaptures": {
-                "0": {
-                    "name": "punctuation.definition.s-exp.list.stanza"
-                }
-            },
-            "end": "\\)",
-            "patterns": [
-                { "begin": "\\(", "end": "\\)" }
-            ]
-        },
-        {
+        {   "name": "meta.tag.here.stanza",
             "begin": "(\\\\<)(.+?)(>)",
             "beginCaptures": {
                 "1": { "name": "punctuation.definition.here.tag.stanza" },
@@ -265,53 +312,53 @@
             },
             "contentName": "string.unquoted.here.stanza"
         },
-        {
-            "begin": "`",
+        {   "name": "meta.operator.deref.stanza",
+            "begin": "(?<=\\s|\\()\\[",
             "beginCaptures": {
-                "0": { "name": "punctuation.definition.s-exp.stanza" }
+                "0": { "name": "punctuation.section.embedded.deref.begin.stanza" }
             },
-            "end": "(?=[\\s)}\\]])",
-            "name": "constant.language.s-exp.stanza",
+            "end": "\\]",
+            "endCaptures": {
+                "0": { "name": "punctuation.section.embedded.deref.end.stanza" }
+            },
             "patterns": [
-                { "begin": "\\(", "end": "\\)" },
-                { "begin": "\\{", "end": "\\}" }
+                { "include": "$self" }
             ]
         },
-        {
-            "begin": "(?<=\\s|\\()\\[",
-            "end": "\\]",
-            "captures": {
-                "0": { "name": "punctuation.section.embedded.deref.stanza" }
-            },
+        {   "name": "support.class.type.stanza",
+            "match": "(?x) (?<= \\S : \\s* ) ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*)",
+            "comment": "Probably weird to have a `\\w` in the final guard but it's what works..."
+        },
+        {   "name": "support.function.stanza",
+            "match": "(?x) \\s* ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*) (?= < | \\( | \\s+ \\$ )"
+        },
+        { "include": "#identifiers" }
+    ],
+    "repository": {
+        "identifiers": {
             "patterns": [
-                {
-                    "begin": "(?<=\\S)\\[",
+                {   "name": "variable.identifier.stanza",
+                    "match": "(?x) \\s* ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*)"
+                }
+            ]
+        },
+        "tuples": {
+            "patterns": [
+                {   "name": "meta.operator.tuple.stanza",
+                    "begin": "\\s*\\[",
+                    "beginCaptures": {
+                        "0": { "name": "punctuation.section.embedded.tuple.begin.stanza" }
+                    },
                     "end": "\\]",
+                    "endCaptures": {
+                        "0": { "name": "punctuation.section.embedded.tuple.end.stanza" }
+                    },
                     "patterns": [
                         { "include": "$self" }
                     ]
-                },
-                { "include": "$self" }
+                }
             ]
         },
-        {	"name": "meta.type.instance.stanza",
-            "begin": "(?x) (\\s*)(?:(val|var)\\s+.+\\s+(=)\\s+)? (new)\\s+([A-Z][A-Za-z0-9_]*)(?=.*:$)",
-            "beginCaptures": {
-                "2": { "name": "storage.type.stanza" },
-                "3": { "name": "keyword.operator.stanza" },
-                "4": { "name": "storage.type.stanza" },
-                "5": { "name": "support.type.stanza" }
-            },
-            "end": "^(?!\\1\\s+|\\n)",
-            "patterns": [
-                {   "name": "variable.language.instance.stanza",
-                    "match": "\\bthis\\b"
-                },
-                { "include": "$self" }
-            ]
-        }
-    ],
-    "repository": {
         "lostanza": {
             "patterns": [
                 {   "name": "keyword.other.special-method.lostanza.stanza",
@@ -343,31 +390,61 @@
                 }
             ]
         },
+        "return-types": {
+            "patterns": [
+                {	"name": "meta.declaration.return-type.stanza",
+                    "begin": "(?x) (?<=\\)) \\s+ (->) \\s+",
+                    "beginCaptures": {
+                        "1": { "name": "keyword.control.return-type.stanza" }
+                    },
+                    "end": "(?x) (?= $ | : | ; | \\) | \\] | \\} ) ",
+                    "patterns": [
+                        { "include": "#types" }
+                    ]
+                }
+            ]
+        },
         "types": {
             "patterns": [
-                {
-                    "match": "(?<!\\w)\\?",
-                    "name": "keyword.other.unit.unknown.stanza"
+                {   "name": "keyword.operator.type.stanza",
+                    "match": "(?x) \\s* (?: \\| | & | -> | , | <: | \\? (?! \\w | \\# | \\$ ) | \\.\\.\\. ) \\s*"
                 },
-                {
-                    "begin": "(?<!\\w)([A-Z][A-Za-z0-9_-]*)(?![(:\\-]|\\w)(<)",
+                {   "name": "variable.type.captured.stanza",
+                    "match": "\\?[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*"
+                },
+                {   "name": "entity.name.type.stanza",
+                    "match": "[^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*"  
+                },
+                {   "name": "support.type.stanza",
+                    "match": "(?x) Void | Equalable | Comparable | Hashable | Lengthable | Seq(?:able)? | (?:Indexed)?Collection | (?:Out|In)(?:put|dented)Stream | (?:String|File)(?:Out|In)putStream |  RandomAccessFile | Byte | Int | Long | Float | Double | True | False | Char | Range | String(?:Buffer)? | (?:Char|Byte)?Array | Tuple | List | FileInfo | Token | KeyValue | (?:String|Gen)?Symbol | Maybe | One | None | Exception | Coroutine | Vector | Timer | Liveness(?:Tracker|Marker) | Queue | Table | HashTable | (?:Splice|Nested|Plural|Choice)Template"
+                },
+                {   "name": "meta.type.parameter.stanza",
+                    "begin": "(?x) (?<! \\s ) < (?! : )",
                     "captures": {
-                        "1": { "name": "support.type.parameterized.stanza" },
-                        "2": { "name": "punctuation.section.type.parameter.begin.stanza" }
+                        "0": { "name": "punctuation.section.type.parameter.begin.stanza" }
                     },
-                    "end": "(?!\\-)>",
+                    "end": "(?x) (?<!\\-) >",
                     "endCaptures": {
                         "0": { "name": "punctuation.section.type.parameter.end.stanza" }
                     },
-                    "name": "meta.type.parameterized.stanza",
                     "patterns": [
                         { "include": "#types" }
                     ]
                 },
-                {
-                    "match": "(?<!\\w)([A-Z][A-Za-z0-9_-]*)(?![(:\\-]|\\w)",
-                    "name": "support.type.stanza"
+                {   "name": "meta.type.tuple.stanza",
+                    "begin": "\\[",
+                    "captures": {
+                        "0": { "name": "punctuation.section.type.tuple.begin.stanza" }
+                    },
+                    "end": "\\]",
+                    "endCaptures": {
+                        "0": { "name": "punctuation.section.type.tuple.end.stanza" }
+                    },
+                    "patterns": [
+                        { "include": "#types" }
+                    ]
                 }
+                
             ]
         }
     }
