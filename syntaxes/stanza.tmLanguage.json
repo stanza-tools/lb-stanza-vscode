@@ -113,11 +113,12 @@
             ]
         },
 		{   "name": "meta.declaration.function.stanza",
-            "match": "(?x) ^ \\s* (?: (public|protected) \\s+ )? ( defn|defmethod|defmulti ) \\*? \\s+ ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*) (?= \\s | < )",
+            "match": "(?x) ^ \\s* (?: (public|protected) \\s+ )? (?: (lostanza) \\s+ )? ( defn|defmethod|defmulti ) \\*? \\s+ ([^ `\"'\t0-9~!%^*+-=/.:&|<>\\(\\{\\[][^ \t,.:&|<>\\[\\]\\{\\}\\(\\)\\*]*) (?= \\s | < )",
             "captures": {
                 "1": { "name": "storage.modifier.function.visibility.stanza" },
-                "2": { "name": "storage.type.function.stanza" },
-                "3": { "name": "entity.name.function.stanza" }
+                "2": { "name": "storage.modifier.function.lostanza.stanza" },
+                "3": { "name": "storage.type.function.stanza" },
+                "4": { "name": "entity.name.function.stanza" }
             }
         },
         { "include": "#return-types" },

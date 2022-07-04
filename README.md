@@ -29,6 +29,24 @@ Only supports syntax highlighting and auto-indentation for now.
 
 ## Release Notes
 
+### 0.4.1
+
+* Add image
+* Fix for `lostanza` modifier
+
+### 0.4.0
+
+* Moved many regexes to expanded for readability
+* Condensed and moved names to improve folding
+* Added separate tuple rule to improve syntax detection
+* Updated many rules to account for leading spaces (not sure why...)
+* Separated import rule
+* Refactored and fixed new object rule
+* Updated support roles and types
+* Added return types
+* Complete refactor of types
+* Changed some highlighting tags for readability
+
 ### 0.3.0
 
 Add support for `.proj` files (environment variable highlighting and the extra builtin functions described [here](https://github.com/StanzaOrg/lbstanza/blob/master/docs/build-system.md))

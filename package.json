@@ -13,6 +13,7 @@
     "categories": [
         "Programming Languages"
     ],
+    "icon": "assets/lb_stanza_medium_icon.png",
     "contributes": {
         "languages": [
             {
