@@ -1,11 +1,48 @@
 defpackage deserialize :
     import core
     import stz/defs-db-ir
+    import stz/package-stamps
 
-val defdb = stz/defs-db-serializer/read-definitions-database $
-    FileInputStream(command-line-arguments()[1])
+val read-def-db = stz/defs-db-serializer/read-definitions-database
+val defdb = read-def-db $ FileInputStream $ command-line-arguments()[1]
+
+#if-defined(PLATFORM-WINDOWS) :
+  val correct-delim = '\\'
+  val wrong-delim = '/'
+#else :
+  val correct-delim = '/'
+  val wrong-delim = '\\'
+
+; This should probably be more forgiving to other setups
+defn replace-pkg-with-src (filename:String|False, pkg:String) :
+  match(filename) :
+    (_:False) : ""
+    (f:String) : match(index-of-chars(f, append(to-string(correct-delim), "pkg"))) :
+      (_:False) : f
+      (i:Int) : "%_%_%_%_" % [
+        f[0 to i],
+        to-string(correct-delim),
+        replace(pkg, wrong-delim, correct-delim),
+        ".stanza"
+      ]
+
+defn filepath (p:PackageDefinitions) :
+  val pname = to-string(name(p))
+  match(source(p)) :
+    (_:SrcDefinition) : source-file(location(stamp(p)))
+    (_:PkgDefinition) : replace-pkg-with-src(
+      pkg-file(location(stamp(p))),
+      if pname == "clib" or pname == "core" : "core/core" else : pname
+    )
 
 for package in packages(defdb) do :
-    println(name(package))
-
-
+  val package-filepath = filepath(package)
+  for definition in definitions(package) do :
+    println("file=%_\tline=%_\tcol=%_\tname=%_\tkind=%_\tvisibility=%_" % [
+      package-filepath,
+      line(file-info(definition)),
+      column(file-info(definition)),
+      name(definition),
+      kind(definition),
+      visibility(definition),
+    ])

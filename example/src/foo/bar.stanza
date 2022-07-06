@@ -1,0 +1,5 @@
+defpackage foo/bar :
+    import core
+
+val foo = 12
+defn foo/bar () : "cool!"

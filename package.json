@@ -19,8 +19,9 @@
         "compile": "tsc -p ./",
         "lint": "eslint . --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
-        "server": "zx --shell=C:\\msys64\\usr\\bin\\bash.exe ./scripts/server.mjs",
-        "deserialize": "stanza run /c/msys64/home/madca/Projects/lb-stanza-vscode/scripts/deserialize.stanza -- /c/msys64/home/madca/Projects/stanza-curl/test.dat"
+        "example": "zx --shell=C:\\msys64\\usr\\bin\\bash.exe ./scripts/server.mjs --workspaceDir=\"%npm_config_local_prefix%/example\"",
+        "check-env": "node --eval=\"console.log(require('process').env)\" | grep npm",
+        "deserialize": "stanza run scripts/deserialize.stanza -- example/test.dat"
     },
     "dependencies": {
         "watch": "^1.0.2",
