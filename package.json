@@ -21,7 +21,7 @@
         "watch": "tsc -watch -p ./",
         "example": "zx --shell=C:\\msys64\\usr\\bin\\bash.exe ./scripts/server.mjs --workspaceDir=\"%npm_config_local_prefix%/example\"",
         "check-env": "node --eval=\"console.log(require('process').env)\" | grep npm",
-        "deserialize": "stanza run scripts/deserialize.stanza -- example/test.dat"
+        "deserialize": "stanza run scripts/deserialize.stanza -- example/lb-stanza-code_defsdb.dat"
     },
     "dependencies": {
         "watch": "^1.0.2",
