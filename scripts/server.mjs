@@ -1,17 +1,24 @@
 #!/usr/bin/env zx
 
-import 'zx/globals';
-import { access, rm, watch, readFile } from 'fs/promises';
-import { constants } from 'fs';
-import parseArgs from 'minimist';
+/**========================================================================
+ *                           Setup
+ *========================================================================**/
 
+ import 'zx/globals';
+ import { access, rm, watch, readFile } from 'fs/promises';
+ import { constants } from 'fs';
+ import parseArgs from 'minimist';
+
+process.title = 'stnzls';
+
+// had to change due to a weird bug occurs on the `...\example\...` folder name
 $.quote = function quote(arg) {
     if (/^[a-z0-9/_.-]+$/i.test(arg) || arg === '') {
-      return arg
+        return arg
     }
     return (
-      `$'` +
-      arg
+        `$'` +
+        arg
         .replace(/\\/g, '\\\\')
         .replace(/'/g, "\\'")
         .replace(/\f/g, '\\f')
@@ -19,20 +26,21 @@ $.quote = function quote(arg) {
         .replace(/\r/g, '\\r')
         .replace(/\t/g, '\\t')
         .replace(/\v/g, '\\v')
-        .replace(/\\e/g, '\\\\e') // strange bug that converts to escape sequence \e
+        .replace(/\\(?=e)/g,'\\\\') // strange bug that converts to escape sequence \e
         .replace(/\0/g, '\\0') +
-      `'`
+        `'`
     )
-  }
+}
 
-/**========================================================================
- *                           Definitions Database
- *========================================================================**/
-
+// Check if a file exists
 async function exists(p) {
     try { await access(p, constants.F_OK); return true }
     catch { return false }
 }
+
+/**========================================================================
+ *                           Definitions Database
+ *========================================================================**/
 
 class DefinitionsDatabase {
     constructor(mainProjPath, datPath, projFiles) {
@@ -64,7 +72,7 @@ class DefinitionsDatabase {
     async generate() {
         console.log('Generating dat file...');
         let args = [this.mainProjPath, '-o', this.datPath]
-        if (this.isGenerated) args.push('-merge-with', this.datPath);
+        if (this.isGenerated && await exists(this.datPath)) args.push('-merge-with', this.datPath);
         let results = await $`stanza definitions-database ${args}`;
         this.isGenerated = true;
         return results;
@@ -142,22 +150,21 @@ await defDB.traverse();
  *                           Commands
  *========================================================================**/
 
-
+ function documentSymbolsChoice() {}
+ function folderSymbolsAction() {}
+ function referencesAction() {}
+ function hoverAction() {}
+ function completionsAction() {}
+ function daignosticAction() {}
+ function definitionAction() {}
+ function implementationsAction() {}
+ function signatureAction() {}
+ function quitAction() { process.exit() }
 
 /**========================================================================
  *                           Command Line
  *========================================================================**/
 /*
-function documentSymbolsChoice() {}
-function folderSymbolsAction() {}
-function referencesAction() {}
-function hoverAction() {}
-function completionsAction() {}
-function daignosticAction() {}
-function definitionAction() {}
-function implementationsAction() {}
-function signatureAction() {}
-function quitAction() { process.exit() }
 
 const CHOICES = {
     'document-symbols': documentSymbolsAction,
