@@ -14,7 +14,37 @@
         "Programming Languages"
     ],
     "icon": "assets/lb_stanza_medium_icon.png",
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "lint": "eslint . --ext .ts,.tsx",
+        "watch": "tsc -watch -p ./",
+        "server": "zx --shell=C:\\msys64\\usr\\bin\\bash.exe ./scripts/server.mjs",
+        "deserialize": "stanza run /c/msys64/home/madca/Projects/lb-stanza-vscode/scripts/deserialize.stanza -- /c/msys64/home/madca/Projects/stanza-curl/test.dat"
+    },
+    "dependencies": {
+        "watch": "^1.0.2",
+        "zx": "^7.0.7"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.1",
+        "@types/vscode": "^1.68.1",
+        "@typescript-eslint/eslint-plugin": "^5.30.4",
+        "@typescript-eslint/parser": "^5.30.4",
+        "eslint": "^8.19.0",
+        "typescript": "^4.7.4"
+    },
+    "activationEvents": [
+        "onCommand:extension.helloWorld"
+    ],
+    "main": "./out/extension.js",
     "contributes": {
+        "commands": [
+            {
+                "command": "extension.helloWorld",
+                "title": "Hello World"
+            }
+        ],
         "languages": [
             {
                 "id": "stanza",

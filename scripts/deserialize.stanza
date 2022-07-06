@@ -1,0 +1,11 @@
+defpackage deserialize :
+    import core
+    import stz/defs-db-ir
+
+val defdb = stz/defs-db-serializer/read-definitions-database $
+    FileInputStream(command-line-arguments()[1])
+
+for package in packages(defdb) do :
+    println(name(package))
+
+

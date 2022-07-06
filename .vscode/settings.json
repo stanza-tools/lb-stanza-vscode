@@ -1,0 +1,13 @@
+{
+    // "terminal.integrated.automationProfile.windows": {
+    //     "path": "${env:SystemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    //     "args": [
+    //         // "--login",
+    //         // "-c",
+    //     ],
+    //     "env": {
+    //     //     "CHERE_INVOKING": "1",
+    //     //     "STANZA_CONFIG": "${env:HOME}/Stanza"
+    //     }
+    // },
+}
