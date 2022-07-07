@@ -1,1 +1,8 @@
 include "src/stanza.proj"
+
+build main :
+    inputs:
+        example
+        foo
+        foo/bar
+    o: "example_main"

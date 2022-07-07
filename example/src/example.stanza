@@ -1,0 +1,12 @@
+defpackage example :
+    import core
+    import foo
+    import foo/bar
+
+val wow = 12
+
+defn main () :
+
+    println(foo)
+
+    println(foo/bar())

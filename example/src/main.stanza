@@ -1,8 +1,0 @@
-defpackage main :
-    import core
-    import foo
-    import foo/bar
-
-println(foo)
-
-println(foo/bar())

@@ -2,4 +2,4 @@ defpackage foo :
     import core
 
 val foo = "WOW!"
-val bar = "boohoo"
+protected val bar = "boohoo"

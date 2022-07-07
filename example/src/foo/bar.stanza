@@ -2,4 +2,5 @@ defpackage foo/bar :
     import core
 
 val foo = 12
-defn foo/bar () : "cool!"
+val wow = 20
+public defn foo/bar () : "cool!"
