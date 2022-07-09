@@ -5,7 +5,7 @@
  *========================================================================**/
 
  import 'zx/globals';
- import { access, rm, watch, readFile } from 'fs/promises';
+ import { access, rm, watch as fsWatch, readFile } from 'fs/promises';
  import { constants } from 'fs';
  import parseArgs from 'minimist';
 import { stripVTControlCharacters } from 'util';
@@ -45,6 +45,11 @@ async function exists(p) {
     catch { return false }
 }
 
+function watch(file, abortController) {
+    let { signal } = abortController;
+    return fsWatch(file, signal);
+}
+
 /**========================================================================
  *                           Definitions Database
  *========================================================================**/
@@ -57,7 +62,7 @@ class DefinitionsDatabase {
      * @param {string} datPath the path to the main `*.dat` file
      * @param {Array.<string>} projFiles A list of all proj files within the heirarchy
      */
-    constructor(mainProjPath, datPath, projFiles) {
+    constructor(mainProjPath, datPath, projFiles, logFn) {
         /**
          * @member {boolean} isGenerated has the def database been generated already? */
         this.isGenerated = false;
@@ -92,10 +97,14 @@ class DefinitionsDatabase {
 
         /**
          * @member {Array.<Object.<string, string|number>>} defs the final resulting list of defs */
-         this.defs = [];
+        this.defs = [];
+
+        /**
+         * @member {Function} log a better logger that replaces the prompt */
+        this.log = logFn;
     }
     abortAllWatchers() { this.abortController.abort() }
-    clear() { this.abortAllWatchers; this.stzFiles = [] }
+    clear() { this.log("Clearing all watchers..."); this.abortAllWatchers(); this.stzFiles = [] }
     /**
      * Walks through all the proj files and sets up proj and stanza watchers
      */
@@ -109,15 +118,18 @@ class DefinitionsDatabase {
     async setupProjWatcher(projFile) {
         // console.log(`Setting up proj file ${projFile} watcher...`);
         try {
-            let watcher = watch(projFile, this.abortController.signal);
-            await this.readProjFile(projFile)
+            let watcher = watch(projFile, this.abortController);
+            await this.readProjFile(projFile);
             (async function() {
                 for await (let event of watcher) {
-                    console.log("proj file %s event occurred '%s'", stzFile, event.eventType);
+                    this.log("proj file %s event occurred '%s'", stzFile, event.eventType);
                     if (event.eventType == 'change') await this.readProjFile(projFile)
                 }
-            })()
-        } catch (err) { if (err.name == 'AbortError') return }
+            })();
+        } catch (err) {
+            if (err.name == 'AbortError') return;
+            throw err;
+        }
         // console.log(`Finished setting up proj file ${projFile} watcher!`);
         return
     }
@@ -136,7 +148,7 @@ class DefinitionsDatabase {
                 definedFiles.filter(async function(v) { await exists(v) }))
             for (let file of filteredFiles) this.watchStzFile(path.join(path.dirname(p), file))
             await this.generate();
-        } catch(err) { console.log(err); throw err }
+        } catch(err) { this.log(err); throw err }
     }
     /**
      * Adds a watcher to a stanza file
@@ -144,14 +156,18 @@ class DefinitionsDatabase {
      */
     async watchStzFile(stzFile) {
         // console.log(`Watching stanza file file ${stzFile}...`);
-        if (!(this.stzFiles.includes(stzFile))) {
-            let watcher = watch(stzFile, this.abortController.signal)
-            this.stzFiles.push(stzFile);
-            for await (let event of watcher) {
-                console.log("stanza file %s event occurred '%s'", stzFile, event.eventType);
-                if (event.eventType == 'change') await this.generate();
+        try {
+            if (!(this.stzFiles.includes(stzFile))) {
+                let watcher = watch(stzFile, this.abortController)
+                this.stzFiles.push(stzFile);
+                for await (let event of watcher) {
+                    this.log("stanza file %s event occurred '%s'", stzFile, event.eventType);
+                    if (event.eventType == 'change') await this.generate();
+                }
             }
-            
+        } catch (err) {
+            if (err.name == 'AbortError') return;
+            throw err;
         }
     }
     /**
@@ -188,23 +204,25 @@ class DefinitionsDatabase {
  *========================================================================**/
 
 class Action {
-    static documentSymbols(db, args) {
-        let file = args._[0];
-        db.defs.filter(d => d.file != undefined).filter(d =>
+    static documentSymbols(server) {
+        let file = server.args._[0];
+        server.log(`Gathering symbols for <${file}>...`);
+        if (typeof file === 'undefined') return
+        server.db.defs.filter(d => d.file != undefined).filter(d =>
             path.basename(d.file) == path.basename(file) && path.dirname(d.file) == path.dirname(file)
         ).forEach(d =>
-            console.log(`${d.file}:${d.line}:${d.col} ${d.name}`)
-        )
+            server.log(`${d.file}:${d.line}:${d.col} ${d.name}`)
+        );
     }
-    static folderSymbols(folder) {}
-    static references(sym) {}
-    static hover(sym) {}
-    static completions(search) {}
-    static diagnostic(proj) {}
-    static definition(sym) {}
-    static implementations(sym) {}
-    static signature(sym) {}
-    static quit() { process.exit() }
+    static folderSymbols(server) {}
+    static references(server) {}
+    static hover(server) {}
+    static completions(server) {}
+    static diagnostic(server) {}
+    static definition(server) {}
+    static implementations(server) {}
+    static signature(server) {}
+    static quit(server) { server.abort() }
 }
 
 
@@ -264,26 +282,42 @@ class StanzaLangServer {
     constructor(mpp, dp, pf) {
         this.command = '';
         this.args = {};
-        this.db = new DefinitionsDatabase(mpp, dp, pf);
-        this.running = true;
+        this.db = new DefinitionsDatabase(mpp, dp, pf, this.log.bind(this));
+        this.isRunning = true; // the database is actively pulling in data
+        this.isWaiting = false; // not yet waiting for input from user
     }
+    abort() { this.isRunning = false; this.isWaiting = false; this.db.clear() }
     parse(str) {
         this.args = parseArgs(tokenArgs(str));
         this.command = this.args._.shift();
     }
+    /**
+     * If the server is waiting for input then carefully print the log message
+     */
+    log(...logArgs) {
+        if (this.isWaiting) console.log('');
+        console.log(...logArgs);
+        if (this.isWaiting) process.stdout.write('stnzls> ');
+    }
     choose() { 
-        // console.log(`Choosing ${this.command}...`);
-        if (!CHOICES[this.command]) { console.log(`Unknown action: ${this.command}`) }
-        else { CHOICES[this.command](this.db, this.args) }
+        this.log(`Choosing ${this.command}...`);
+        if (!CHOICES[this.command]) { this.log(`Unknown action: ${this.command}`) }
+        else { CHOICES[this.command](this) }
     }
     async *run() {
         await this.db.traverse();
-        while (this.running) {
-            this.parse(await question('stnzls> ', { choices: Object.keys(CHOICES) }));
+        while (this.isRunning) {
+            this.isWaiting = true;
+            let answer = question('stnzls> ', { choices: Object.keys(CHOICES) });
+            answer.then((data => { this.isWaiting = false; return data }).bind(this))
+            this.parse(await answer);
             yield { done: false, value: null }
         }
+        this.log('Successfully exited run loop!');
+        return { done: true }
     }
 }
 
 const stnzls = new StanzaLangServer(mainProjPath, datPath, projFiles);
 for await (let _ of stnzls.run()) { stnzls.choose() }
+console.log("Bye!");
