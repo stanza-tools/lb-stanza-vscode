@@ -95,7 +95,7 @@ class Definition {
         case 'SrcDefVariable': this.kind = SrcDefVariable; break;
         case 'SrcDefUnknown': this.kind = SrcDefUnknown; break;
         }
-        switch(visibility) {
+        switch(visibility.trim()) {
         case 'Private': this.visibility = PrivateVisibility; break;
         case 'Public': this.visibility = PublicVisibility; break;
         case 'Protected': this.visibility = ProtectedVisibility; break;
@@ -146,19 +146,8 @@ class DefinitionsDatabase {
         this.abortController = new AbortController();
 
         /**
-         * @member {Proxy.<Definition[]>} defs the final resulting list of defs */
-        this.defs = new Proxy([], {
-           has(target, definition) {
-               for (let d of target) {
-                   if (
-                       d.file == definition.file &&
-                       d.line == definition.line &&
-                       d.col == definition.col &&
-                       d.name == definition.name) return true;
-               }
-               return false;
-           }
-        });
+         * @member {Definition[]} defs the final resulting list of defs */
+        this.defs = [];
 
         /**
          * @member {Function} log a better logger that replaces the prompt */
@@ -166,6 +155,20 @@ class DefinitionsDatabase {
     }
     abortAllWatchers() { this.abortController.abort() }
     clear() { this.log("Clearing all watchers..."); this.abortAllWatchers(); this.stzFiles = [] }
+    /**
+     * Checks if the database contains a given definition. Currently, it does not care if
+     * the visibility or kind is different.
+     * @param {Definition} def 
+     */
+    contains(definition) {
+        for (let d of this.defs) {
+            if (d.file == definition.file &&
+                d.line == definition.line &&
+                d.col  == definition.col  &&
+                d.name == definition.name) return true;
+        }
+        return false;
+    }
     /**
      * Walks through all the proj files and sets up proj and stanza watchers
      */
@@ -251,7 +254,7 @@ class DefinitionsDatabase {
         for (let line of stdout.split('\n')) {
             if (line && line.length > 0) {
                 let def = new Definition(line);
-                if (!(def in this.defs)) this.defs.push(def);
+                if (!(this.contains(def))) this.defs.push(def);
             }
         }
         this.isSerialized = true;
