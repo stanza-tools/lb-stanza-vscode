@@ -4,11 +4,10 @@
  *                           Setup
  *========================================================================**/
 
- import 'zx/globals';
- import { access, rm, watch as fsWatch, readFile } from 'fs/promises';
- import { constants } from 'fs';
- import parseArgs from 'minimist';
-import { stripVTControlCharacters } from 'util';
+import 'zx/globals';
+import { access, rm, watch as fsWatch, readFile } from 'fs/promises';
+import { constants } from 'fs';
+import parseArgs from 'minimist';
 
 process.title = 'stnzls';
 
@@ -50,9 +49,60 @@ function watch(file, abortController) {
     return fsWatch(file, signal);
 }
 
+function insidePath(dir, p) {
+    let pDir = path.dirname(p);
+    if (p == pDir) return false;
+    else if (pDir == dir) return true;
+    else return insidePath(dir, pDir)
+}
+
 /**========================================================================
  *                           Definitions Database
  *========================================================================**/
+
+const PrivateVisibility = Symbol('PrivateVisibility');
+const ProtectedVisibility = Symbol('ProtectedVisibility');
+const PublicVisibility = Symbol('PublicVisibility');
+
+const SrcDefFunction = Symbol('SrcDefFunction');
+const SrcDefType = Symbol('SrcDefType');
+const SrcDefMulti = Symbol('SrcDefMulti');
+const SrcDefVariable = Symbol('SrcDefVariable');
+const SrcDefUnknown = Symbol('SrcDefUnknown');
+
+/**
+ * A definition as returned by the desieralizer stanza script
+ * @property {string} file The file path
+ * @property {int} line The line number
+ * @property {int} col The column number
+ * @property {string} name The actual identifier in stanza
+ * @property {Symbol} kind The type of definition
+ * @property {Symbol} visibility The level of visibility 
+ */
+class Definition {
+    constructor(raw) {
+        let segments = raw.split('\t');
+        let entries = segments.map(seg => seg.split('='));
+        let {file, line, col, name, kind, visibility} = Object.fromEntries(entries);
+        this.file = file;
+        this.line = +line;
+        this.col = +col;
+        this.name = name;
+        switch(kind) {
+        case 'SrcDefFunction': this.kind = SrcDefFunction; break;
+        case 'SrcDefType': this.kind = SrcDefType; break;
+        case 'SrcDefMulti': this.kind = SrcDefMulti; break;
+        case 'SrcDefVariable': this.kind = SrcDefVariable; break;
+        case 'SrcDefUnknown': this.kind = SrcDefUnknown; break;
+        }
+        switch(visibility) {
+        case 'Private': this.visibility = PrivateVisibility; break;
+        case 'Public': this.visibility = PublicVisibility; break;
+        case 'Protected': this.visibility = ProtectedVisibility; break;
+        }
+    }
+    toString() { return `[Definition ${path.basename(this.file)} "${this.name}"]` }
+}
 
 /**
  * Class instances handle the shell calls to the stanza compiler and script */
@@ -96,8 +146,19 @@ class DefinitionsDatabase {
         this.abortController = new AbortController();
 
         /**
-         * @member {Array.<Object.<string, string|number>>} defs the final resulting list of defs */
-        this.defs = [];
+         * @member {Proxy.<Definition[]>} defs the final resulting list of defs */
+        this.defs = new Proxy([], {
+           has(target, definition) {
+               for (let d of target) {
+                   if (
+                       d.file == definition.file &&
+                       d.line == definition.line &&
+                       d.col == definition.col &&
+                       d.name == definition.name) return true;
+               }
+               return false;
+           }
+        });
 
         /**
          * @member {Function} log a better logger that replaces the prompt */
@@ -188,9 +249,10 @@ class DefinitionsDatabase {
         // console.log('Deserializing dat file...');
         let {stdout} = await $`stanza run ./scripts/deserialize.stanza -- ${this.datPath}`;
         for (let line of stdout.split('\n')) {
-            let result = {};
-            line.split('\t').map(seg => seg.split('=')).forEach(([k, v]) => result[k] = v)
-            this.defs.push(result);
+            if (line && line.length > 0) {
+                let def = new Definition(line);
+                if (!(def in this.defs)) this.defs.push(def);
+            }
         }
         this.isSerialized = true;
         return;
@@ -214,7 +276,18 @@ class Action {
             server.log(`${d.file}:${d.line}:${d.col} ${d.name}`)
         );
     }
-    static folderSymbols(server) {}
+    /**
+     * 
+     * @param {StanzaLanguageServer} server 
+     */
+    static folderSymbols(server) {
+        let noCoreFlag = !!server.args.nocore;
+        for (const [_, d] of server.db.defs.entries()) {
+            let nonCore = (x, y) => insidePath(path.normalize(x), path.normalize(y));
+            if (noCoreFlag && !nonCore(argv.workspaceDir, d.file)) continue;
+            server.log(`${d.file}:${d.line}:${d.col} ${d.name}`)
+        }
+    }
     static references(server) {}
     static hover(server) {}
     static completions(server) {}
