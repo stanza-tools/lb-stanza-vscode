@@ -13,26 +13,9 @@ process.title = 'stnzls';
 
 $.verbose = false;
 
-// had to change due to a weird bug occurs on the `...\example\...` folder name
-$.quote = function quote(arg) {
-    if (/^[a-z0-9/_.-]+$/i.test(arg) || arg === '') {
-        return arg
-    }
-    return (
-        `$'` +
-        arg
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/\f/g, '\\f')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t')
-        .replace(/\v/g, '\\v')
-        .replace(/\\(?=e)/g,'\\\\') // strange bug that converts to escape sequence \e
-        .replace(/\0/g, '\\0') +
-        `'`
-    )
-}
+// shq seems to just introduce tons of errors with windows paths
+$.quote = v => v;
+
 
 /**
  * Checks if the file exists on the system
@@ -124,17 +107,17 @@ class DefinitionsDatabase {
         /**
          * @member {string} mainProjPath path to the main stanza.proj file that will be supplied
          * to the definitions-database command */
-        this.mainProjPath = mainProjPath.replace('\\', '\\\\');
-
+        this.mainProjPath = mainProjPath.replace(/\\(?=[a-z])/, '\\\\');
+        // logFn(`mainProjPath: ${this.mainProjPath}`);
         /**
          * @member {string} datPath path to the dat file that the definitions-database command
         // generates (for parsing by a language server) */
-        this.datPath = datPath.replace('\\', '\\\\');
+        this.datPath = datPath.replace(/\\(?=[a-z])/, '\\\\');
 
         /**
          * @member {Array.<string>} projFiles a list of all stanza.proj files in the source
          * folder */
-        this.projFiles = projFiles.map(p => p.replace('\\', '\\\\'));
+        this.projFiles = projFiles.map(p => p.replace(/\\(?=[a-z])/, '\\\\'));
 
         /**
          * @member {Array.<string>} stzFiles a list of all *.stanza files that are currently
@@ -184,9 +167,10 @@ class DefinitionsDatabase {
         try {
             let watcher = watch(projFile, this.abortController);
             await this.readProjFile(projFile);
+            let logFn = this.log;
             (async function() {
                 for await (let event of watcher) {
-                    this.log("proj file %s event occurred '%s'", stzFile, event.eventType);
+                    logFn(`proj file ${projFile} event occurred '${event.eventType}'`);
                     if (event.eventType == 'change') await this.readProjFile(projFile)
                 }
             })();
@@ -239,9 +223,9 @@ class DefinitionsDatabase {
      */
     async generate() {
         // console.log('Generating dat file...');
-        let args = [this.mainProjPath, '-o', this.datPath]
-        if (this.isGenerated && await exists(this.datPath)) args.push('-merge-with', this.datPath);
-        await $`stanza definitions-database ${args}`;
+        await $`stanza definitions-database '${this.mainProjPath}' -o '${this.datPath}' ${
+            this.isGenerated && await exists(this.datPath) ? $`-merge-with '${this.datPath}'` : ''
+        }`;
         this.isGenerated = true; this.isSerialized = false;
         return await this.deserialize();
     }
@@ -250,7 +234,7 @@ class DefinitionsDatabase {
      */
     async deserialize() {
         // console.log('Deserializing dat file...');
-        let {stdout} = await $`stanza run ./scripts/deserialize.stanza -- ${this.datPath}`;
+        let {stdout} = await $`stanza run ./scripts/deserialize.stanza -- '${this.datPath}'`;
         for (let line of stdout.split('\n')) {
             if (line && line.length > 0) {
                 let def = new Definition(line);
@@ -269,7 +253,11 @@ class DefinitionsDatabase {
  *========================================================================**/
 
 class Action {
-    static documentSymbols(server) {
+    /**
+     * Gather only symbols for current document
+     * @param {StanzaLangServer} server 
+     */
+    static async documentSymbols(server) {
         let file = server.args._[0];
         server.log(`Gathering symbols for <${file}>...`);
         if (typeof file === 'undefined') return
@@ -280,25 +268,40 @@ class Action {
         );
     }
     /**
-     * 
-     * @param {StanzaLanguageServer} server 
+     * Gather all symbols in the folder, optionally without core symbols
+     * @param {StanzaLangServer} server 
      */
-    static folderSymbols(server) {
-        let noCoreFlag = !!server.args.nocore;
+    static async folderSymbols(server) {
         for (const [_, d] of server.db.defs.entries()) {
             let nonCore = (x, y) => insidePath(path.normalize(x), path.normalize(y));
-            if (noCoreFlag && !nonCore(argv.workspaceDir, d.file)) continue;
+            if (server.args.nocore && !nonCore(argv.workspaceDir, d.file)) continue;
             server.log(`${d.file}:${d.line}:${d.col} ${d.name}`)
         }
     }
-    static references(server) {}
-    static hover(server) {}
-    static completions(server) {}
-    static diagnostic(server) {}
-    static definition(server) {}
-    static implementations(server) {}
-    static signature(server) {}
-    static quit(server) { server.abort() }
+    static async references(server) {
+        let symbol = server.args._[0];
+        for (let file of server.db.stzFiles) {
+            let stdout = '';
+            try {
+                let result = await $`grep --fixed-strings --line-number '${symbol}' '${file}'`;
+                stdout = result.stdout;
+            } catch(e) { if (e.toString().length != 0) throw e }
+            
+            for (let [linenum, line] of stdout.split('\n').filter(v=>v).map(l => l.split(':'))) {
+                let [pre, post] = line.split(symbol);
+                if (post.trim().length > 0 ||
+                    !pre.match(/(?:def\w+|va[lr]|label<.+>)\s+/)) { continue; }
+                else { server.log(`${file}:${linenum}:${pre.length} ${line}`) }
+            }
+        };
+    }
+    static async hover(server) {}
+    static async completions(server) {}
+    static async diagnostic(server) {}
+    static async definition(server) {}
+    static async implementations(server) {}
+    static async signature(server) {}
+    static async quit(server) { server.abort() }
 }
 
 
@@ -369,16 +372,17 @@ class StanzaLangServer {
     }
     /**
      * If the server is waiting for input then carefully print the log message
+     * @param  {...any} logArgs 
      */
     log(...logArgs) {
         if (this.isWaiting) console.log('');
         console.log(...logArgs);
         if (this.isWaiting) process.stdout.write('stnzls> ');
     }
-    choose() { 
+    async choose() { 
         this.log(`Choosing ${this.command}...`);
         if (!CHOICES[this.command]) { this.log(`Unknown action: ${this.command}`) }
-        else { CHOICES[this.command](this) }
+        else { await CHOICES[this.command](this) }
     }
     async *run() {
         await this.db.traverse();
@@ -395,5 +399,5 @@ class StanzaLangServer {
 }
 
 const stnzls = new StanzaLangServer(mainProjPath, datPath, projFiles);
-for await (let _ of stnzls.run()) { stnzls.choose() }
+for await (let _ of stnzls.run()) { await stnzls.choose() }
 console.log("Bye!");
