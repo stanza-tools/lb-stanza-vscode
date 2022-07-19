@@ -41,7 +41,7 @@ for package in packages(defdb) do :
     println("file=%_\tline=%_\tcol=%_\tname=%_\tkind=%_\tvisibility=%_" % [
       package-filepath,
       line(file-info(definition)),
-      column(file-info(definition)),
+      column(file-info(definition)) + 1,
       name(definition),
       kind(definition),
       visibility(definition),
